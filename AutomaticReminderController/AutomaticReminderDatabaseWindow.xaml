@@ -1,0 +1,24 @@
+﻿<Window
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+    mc:Ignorable="d" 
+    x:Class="AutomaticReminderController.AutomaticReminderDatabaseWindow"
+        Title="Automatic Reminder Info" d:DesignWidth="556" d:DesignHeight="295">
+    <Canvas>
+        <Canvas Name="CanvasContacts">
+            <DataGrid HorizontalAlignment="Left" 
+			VerticalAlignment="Top"
+			ItemsSource="{Binding ContactsList}"  CanUserAddRows="True"/>
+        </Canvas>
+        <Canvas Name="CanvasEvents">
+            <!--<Button Click="ButtonBase_OnClick" Content="Hide" Width="52" Margin="0,0,0,261"/>-->
+        </Canvas>
+        <DataGrid HorizontalAlignment="Left" 
+        	VerticalAlignment="Top" 
+                  VerticalScrollBarVisibility="Visible"
+        	ItemsSource="{Binding AutomaticReminderEvents}"
+        	CanUserAddRows="True" Canvas.Left="315"/>
+    </Canvas>
+</Window>

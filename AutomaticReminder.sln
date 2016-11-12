@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutomaticReminderService", "AutomaticReminder\AutomaticReminderService.csproj", "{06AA81F3-E73D-4AAD-80B4-F37A8D0ECC57}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutomaticReminderController", "AutomaticReminderController\AutomaticReminderController.csproj", "{70F4231B-B13F-4687-9E34-2007058A6BF0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutomaticReminderCommon", "AutomaticReminderCommon\AutomaticReminderCommon.csproj", "{3C375247-4814-48CE-9A6E-65B8C627E77E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{06AA81F3-E73D-4AAD-80B4-F37A8D0ECC57}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{06AA81F3-E73D-4AAD-80B4-F37A8D0ECC57}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{06AA81F3-E73D-4AAD-80B4-F37A8D0ECC57}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{06AA81F3-E73D-4AAD-80B4-F37A8D0ECC57}.Release|Any CPU.Build.0 = Release|Any CPU
+		{70F4231B-B13F-4687-9E34-2007058A6BF0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{70F4231B-B13F-4687-9E34-2007058A6BF0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{70F4231B-B13F-4687-9E34-2007058A6BF0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{70F4231B-B13F-4687-9E34-2007058A6BF0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3C375247-4814-48CE-9A6E-65B8C627E77E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3C375247-4814-48CE-9A6E-65B8C627E77E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3C375247-4814-48CE-9A6E-65B8C627E77E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3C375247-4814-48CE-9A6E-65B8C627E77E}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

@@ -3,3 +3,6 @@
 ################################################################################
 
 /bin/Debug
+/AutomaticReminder/obj/Debug
+/AutomaticReminderCommon/obj/Debug
+/AutomaticReminderController/obj/Debug
