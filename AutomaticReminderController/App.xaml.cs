@@ -1,6 +1,6 @@
 ﻿using System.Windows;
 
-namespace HappyHourReminderGUI
+namespace AutomaticReminderController
 {
     /// <summary>
     /// Interaction logic for App.xaml

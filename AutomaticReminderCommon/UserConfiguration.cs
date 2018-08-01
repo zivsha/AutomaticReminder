@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.ServiceProcess;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -24,56 +25,46 @@ namespace AutomaticReminderCommon
         public static string SmsServerUserName { get; set; }
         public static string SmsServerPassword { get; set; }
         public static string SmsServerGatway { get; set; }
+        public static string LogPath { get; set; }
+        public static string ServiceName { get; set; } = "AutomaticReminder";
+        public static string ServiceDescription { get; set; } = "My Automatic Reminder";
+        public static string ServiceDisplayName { get; set; } = "Automatic Reminder";
+        public static ServiceStartMode ServiceStartType { get; set; } = ServiceStartMode.Manual;
 
-        private const string filePath = @"UserConfigurations.config";
+        private const string filePath = @"UserConfigurations.txt"; //TODO: edit this
         static UserConfiguration()
         {
             if (!File.Exists(filePath))
             {
-                BalloonTipManager.CreateBaloonTip(SystemIcons.Error, "Automatic Reminder Error",
-                   "File " + filePath + " doesn't exist",
-                   ToolTipIcon.Error, 30, null);
+                BalloonTipManager.CreateBaloonTipError($"File path \"{filePath}\" doesn't exist");
                 Logger.LogFormat("Error: Configuration file doesn't exist at: {0}", filePath);
                 return;
             }
             var lines = File.ReadAllLines(filePath);
             foreach (var line in lines)
             {
-                if (String.IsNullOrWhiteSpace(line) || line.StartsWith("//"))
+                if (String.IsNullOrWhiteSpace(line) || line.StartsWith("#"))
                 {
                     continue;
                 }
                 var keyValue = line.Split('=');
                 if (keyValue.Length < 2)
                 {
-                    BalloonTipManager.CreateBaloonTip(SystemIcons.Error, "Automatic Reminder Error",
-                        "Error parsing line: " + line,
-                        ToolTipIcon.Error, 30, null);
-                    Logger.LogFormat("Error: Configuration file has an invalid line: {0}", line);
+                    string msg = $"Error parsing line: \"{line}\" in configuration file";
+                    BalloonTipManager.CreateBaloonTipError(msg);
+                    Logger.LogFormat(msg);
                     continue;
                 }
                 string key = keyValue[0].Trim();
                 string value = keyValue[1].Trim();
                 switch (key)
                 {
-                    case "DatabasePath":
-                        DatabasePath = value;
-                        break;
-                    case "FromEmail":
-                        FromEmail = value;
-                        break;
-                    case "FromName":
-                        FromName = value;
-                        break;
-                    case "TestPhoneNumber":
-                        TestPhoneNumber = value;
-                        break;
-                    case "AutomaticReminderIcsTemplatePath":
-                        AutomaticReminderIcsTemplatePath = value;
-                        break;
-                    case "EventLocation":
-                        EventLocation = value;
-                        break;
+                    case "DatabasePath": DatabasePath = value; break;
+                    case "FromEmail": FromEmail = value; break;
+                    case "FromName": FromName = value; break;
+                    case "TestPhoneNumber": TestPhoneNumber = value; break;
+                    case "AutomaticReminderIcsTemplatePath": AutomaticReminderIcsTemplatePath = value; break;
+                    case "EventLocation": EventLocation = value; break;
                     case "StartTime":
                         var time = value.Split(':');
                         if (time.Length < 2)
@@ -85,11 +76,25 @@ namespace AutomaticReminderCommon
                         var minutes = time[1].Trim();
                         StartTime = new TimeSpan(0, Convert.ToInt32(hours), Convert.ToInt32(minutes),0);
                         break;
+                    case "SmsServerUserName" : SmsServerUserName = value; break;
+                    case "SmsServerPassword": SmsServerPassword = value; break;
+                    case "SmsServerGatway": SmsServerUserName = value; break;
+                    case "LogPath": LogPath = value.Replace("\"",""); break;
+                    case "ServiceName": ServiceName = value; break;
+                    case "ServiceDescription": ServiceDescription = value; break;
+                    case "ServiceDisplayName": ServiceDisplayName = value; break;
+                    case "ServiceStartType":
+                        {
+                            ServiceStartMode type;
+                            if (Enum.TryParse(value, out type))
+                            {
+                                ServiceStartType = type;
+                            }
+                            break;
+                        }
                     default:
-                        BalloonTipManager.CreateBaloonTip(SystemIcons.Error, "Automatic Reminder Error",
-                           "No such configuration: " + key,
-                           ToolTipIcon.Error, 30, null);
-                        Logger.LogFormat("Error: SNo such configuration: {0}" , key);
+                        BalloonTipManager.CreateBaloonTipError($"No such configuration: {key}");
+                        Logger.LogFormat("Error: No such configuration: {0}" , key);
                         break;
                 }
             }

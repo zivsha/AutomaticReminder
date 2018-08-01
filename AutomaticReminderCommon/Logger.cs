@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -8,54 +9,57 @@ namespace AutomaticReminderCommon
     //TODO: refactor this logger, use a message queue and a single thread to write to file
     public static class Logger
     {
-        private static readonly object _writeLock = new object();
-        private const string LogPath = @"AutomaticReminderLog.txt"; //TODO: get from configuration file
+        class LogMessage
+        {
+            public string Message { get; set; }
+            public DateTime Time { get; set; }
+        }
 
+        private static BlockingCollection<LogMessage> _logQueue = new BlockingCollection<LogMessage>();
+        private static string LogPath = UserConfiguration.LogPath;
+        private static Task _writerThread;
+        private static CancellationTokenSource source = new CancellationTokenSource();
+        private static CancellationToken token = source.Token;
         static Logger()
         {
+            if (String.IsNullOrWhiteSpace(LogPath))
+            {
+                BalloonTipManager.CreateBaloonTipError("Failed to create logger. Invalid path to log file");
+                _logQueue = null;
+                return;
+            }
             if (!File.Exists(LogPath))
             {
                 File.WriteAllText(LogPath, String.Format("{0} Log File Created\n", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss")));
+            }
+
+            _writerThread = Task.Run(() => FlushQueueToFile());
+        }
+
+        private static void FlushQueueToFile()
+        {
+            while (!token.IsCancellationRequested)
+            {
+                LogMessage log;
+                while (_logQueue.TryTake(out log, 100))
+                {
+                    var timestamp = log.Time.ToString("dd/MM/yyyy HH:mm:ss");
+                    File.AppendAllText(LogPath, $"{timestamp} {log.Message}{Environment.NewLine}");
+                }
             }
         }
 
         public static void LogFormat(string format, params object[] args)
         {
-            var timestamp = DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss");
+            var timestamp = DateTime.Now;
             string msg = String.Format(format, args);
-            
-            lock (_writeLock)
-            {
-                try
-                {
-                    File.AppendAllText(LogPath, String.Format("{0} {1}{2}", timestamp, msg, Environment.NewLine));
-                }
-                catch (IOException)
-                {
-                    ExponentialTryAppendToFile(LogPath, timestamp, msg);
-                }
-            }
+            Logger._logQueue?.Add(new LogMessage { Message = msg, Time = timestamp });
         }
 
-        private static void ExponentialTryAppendToFile(string path, string timestamp, string line)
+        public static void Close()
         {
-            Task.Factory.StartNew(() =>
-            {
-                var random = new Random(Guid.NewGuid().GetHashCode());
-                for (int attempts = 0; attempts < 8; attempts++)
-                {
-                    var sleepTime = Convert.ToInt32(Math.Pow(2, attempts) * 100) + random.Next(-100,100);
-                    try
-                    {
-                        File.AppendAllText(path, String.Format("{0} ({1} attempts) {2}{3}", timestamp, attempts, line,Environment.NewLine));
-                        break;
-                    }
-                    catch (IOException)
-                    {
-                        Thread.Sleep(sleepTime);
-                    }
-                }
-            });
+            source.Cancel();
+            source.Dispose();
         }
     }
 }

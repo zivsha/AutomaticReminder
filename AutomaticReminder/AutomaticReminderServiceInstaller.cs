@@ -1,4 +1,5 @@
-﻿using System.ServiceProcess;
+﻿using AutomaticReminderCommon;
+using System.ServiceProcess;
 
 namespace AutomaticReminderService
 {
@@ -32,10 +33,10 @@ namespace AutomaticReminderService
                 Account = ServiceAccount.LocalSystem
             };
 
-            _serviceInstaller.Description = "My Automatic Reminder";
-            _serviceInstaller.DisplayName = "Automatic Reminder";
-            _serviceInstaller.ServiceName = "AutomaticReminder"; //TODO: get from UserConfiguration
-            _serviceInstaller.StartType = ServiceStartMode.Manual;
+            _serviceInstaller.Description = UserConfiguration.ServiceDescription;
+            _serviceInstaller.DisplayName = UserConfiguration.ServiceDisplayName;
+            _serviceInstaller.ServiceName = UserConfiguration.ServiceName;
+            _serviceInstaller.StartType = UserConfiguration.ServiceStartType;
 
             Installers.Add(_serviceProcessInstaller);
             Installers.Add(_serviceInstaller);

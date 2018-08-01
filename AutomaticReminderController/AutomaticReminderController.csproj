@@ -36,6 +36,10 @@
   <PropertyGroup>
     <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject>
+    </StartupObject>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Data" />
@@ -111,7 +115,6 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\AutomaticReminderCommon\AutomaticReminderCommon.csproj">
       <Project>{3c375247-4814-48ce-9a6e-65b8c627e77e}</Project>
@@ -138,6 +141,12 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\Clear.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\alarm-clock.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\AutomaticReminderIcon.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

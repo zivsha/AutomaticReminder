@@ -43,6 +43,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="SMSHelper.cs" />
     <Compile Include="UserConfiguration.cs" />
     <Compile Include="ServiceAuxiliary.cs" />
     <Compile Include="BalloonTipManager.cs" />

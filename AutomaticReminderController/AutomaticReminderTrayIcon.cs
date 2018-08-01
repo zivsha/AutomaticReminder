@@ -22,7 +22,9 @@ namespace AutomaticReminderController
         public event MouseEventHandler OnMouseClick;
         private readonly Action _closeHandle;
         private readonly Action _showHandle;
-        private Thread _pipeCommTask;
+        private Task _pipeCommTask;
+        CancellationTokenSource source = new CancellationTokenSource();
+        CancellationToken pipelineToken;
         //private Schedule _schedule;
 
         public AutomaticReminderTrayIcon(Action showHandle, Action closeHandle)
@@ -36,8 +38,8 @@ namespace AutomaticReminderController
             _trayIcon = new NotifyIcon
             {
                 Visible = true,
-                Text = "Automatic Reminder",
-                //Icon = Resources.AutomaticReminderIcon
+                Text = "Controller for " + UserConfiguration.ServiceDisplayName,
+                Icon = Resources.AutomaticReminderIcon //Icon made by Maxim Basinski (https://www.flaticon.com/authors/maxim-basinski) from "Flaticon" (https://www.flaticon.com) is licensed by Creative Commons BY 3.0 http://creativecommons.org/licenses/by/3.0/
             };
             var menu = new ContextMenuStrip();
             _trayIcon.MouseClick += delegate(object sender, MouseEventArgs args)
@@ -46,6 +48,7 @@ namespace AutomaticReminderController
             };
 
             var itemSendFakeReminder= new ToolStripMenuItem { Text = @"Send Fake Reminder", Image = Resources.FakeAlert };
+            itemSendFakeReminder.ToolTipText = "Instruct service to test send a reminder";
             itemSendFakeReminder.Click +=
                 (sender, args) =>
                     Task.Factory.StartNew(
@@ -57,6 +60,7 @@ namespace AutomaticReminderController
             menu.Items.Add(itemSendFakeReminder); 
             
             var itemStartReminder = new ToolStripMenuItem { Text = @"Trigger Reminder", Image = Resources.Alert };
+            itemStartReminder.ToolTipText = "Instruct service to check for new reminders";
             itemStartReminder.Click +=
                 (sender, args) =>
                     Task.Factory.StartNew(
@@ -66,10 +70,14 @@ namespace AutomaticReminderController
             menu.Items.Add(itemStartReminder);
 
             var itemStop = new ToolStripMenuItem { Text = @"Stop Service",Image = Resources.Stop};
+            itemStop.Enabled = false;
+            itemStop.ToolTipText = $"Stop \"{UserConfiguration.ServiceName}\" (cannot reach service)";
             itemStop.Click += (sender, args) => ServiceAuxiliary.StopService(CommonAutomaticReminder.ServiceName, 1000);
             menu.Items.Add(itemStop);
 
             var itemStart = new ToolStripMenuItem { Text = @"Start Service", Image = Resources.Start};
+            itemStart.Enabled = false;
+            itemStart.ToolTipText = $"Start \"{UserConfiguration.ServiceName}\" (cannot reach service)";
             itemStart.Click += (sender, args) => ServiceAuxiliary.StartService(CommonAutomaticReminder.ServiceName, 1000);
             menu.Items.Add(itemStart);
 
@@ -91,8 +99,8 @@ namespace AutomaticReminderController
             _updateTrayIconTimer.Interval = 500;
             _updateTrayIconTimer.Start();
 
-            _pipeCommTask = new Thread(PipelineReaderProc) { IsBackground = true };
-            _pipeCommTask.Start();
+            pipelineToken = source.Token;
+            _pipeCommTask = Task.Run(()=> PipelineReaderProc());
         }
 
         private static void SendMessageViaPipe(string pipeName, string message)
@@ -102,49 +110,64 @@ namespace AutomaticReminderController
                 try
                 {
                     client.Connect(5000);
+                    var writer = new StreamWriter(client);
+                    writer.WriteLine(message);
+                    writer.Flush();
+                    client.WaitForPipeDrain();
                 }
                 catch (TimeoutException e)
                 {
-                    Logger.LogFormat("Timeout while trying to connect to service pipe {1} ({0})", e.Message);
+                    Logger.LogFormat($"Timeout while trying to connect to service pipe {pipeName} ({e.Message})");
                 }
                 catch (IOException e)
                 {
-                    Logger.LogFormat("IO Exception while trying to connect to service pipe {1} ({0})", e.Message);
+                    Logger.LogFormat($"IO Exception while trying to connect to service pipe {pipeName} ({e.Message})");
                 }
 
                 catch (Exception e)
                 {
-                    Logger.LogFormat("Exception while trying to connect to service pipe {1} ({0})", e.Message);
+                    Logger.LogFormat($"Exception while trying to connect to service pipe {pipeName} ({e.Message})");
                 }
-                var writer = new StreamWriter(client);
-                writer.WriteLine(message);
-                writer.Flush();
-                client.WaitForPipeDrain();
             }
         }
 
         private void PipelineReaderProc()
         {
             Logger.LogFormat("Started Pipeline Reader Thread");
-            while (true)
+            while (!pipelineToken.IsCancellationRequested)
             {
                 try
                 {
-                    using (var server = new NamedPipeServerStream(CommonAutomaticReminder.Server2ClientNamedPipeName))
+                    using (var stream = new NamedPipeServerStream(CommonAutomaticReminder.Server2ClientNamedPipeName, 
+                                                                  PipeDirection.InOut, 
+                                                                  1,
+                                                                  PipeTransmissionMode.Message,
+                                                                  PipeOptions.Asynchronous))
                     {
-                        Logger.LogFormat("server started waiting for connection");
-                        server.WaitForConnection();
-                        Logger.LogFormat("server finished waiting for connection");
-                        var reader = new StreamReader(server);
-                        while (true)
+                        Logger.LogFormat("Stream started waiting for connection");
+                        var asyncResult = stream.BeginWaitForConnection(null, null);
+                        if (asyncResult.AsyncWaitHandle.WaitOne(5000))
                         {
-                            var line = reader.ReadLine();
-                            if (line != null && line.StartsWith(CommonAutomaticReminder.AutomaticReminderFinished))
+                            stream.EndWaitForConnection(asyncResult);
+                            Logger.LogFormat("Stream finished waiting for connection");
+                            using (var reader = new StreamReader(stream))
                             {
-                                ShowBallonTip(line);
-                                Logger.LogFormat("Received pipe message: {0}", line);
-                                server.Disconnect();
-                                break;
+                                while (!pipelineToken.IsCancellationRequested)
+                                {
+                                    var lineReadTask = reader.ReadLineAsync();
+                                    lineReadTask.Wait(pipelineToken);
+                                    if (lineReadTask.IsCompleted)
+                                    {
+                                        var line = lineReadTask.Result;
+                                        if (line != null && line.StartsWith(CommonAutomaticReminder.AutomaticReminderFinished))
+                                        {
+                                            ShowBallonTip(line);
+                                            Logger.LogFormat("Received pipe message: {0}", line);
+                                            stream.Disconnect();
+                                            break;
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -153,7 +176,6 @@ namespace AutomaticReminderController
                 {
                     Logger.LogFormat("PipelineReaderProc error: {0}", e.Message);
                 }
-
             }
         }
 
@@ -162,8 +184,7 @@ namespace AutomaticReminderController
             _trayIcon.ContextMenuStrip.BeginInvoke(
                 (Action)
                     (() =>
-                        BalloonTipManager.CreateBaloonTip(SystemIcons.Information, "Automatic Reminder", line,
-                            ToolTipIcon.Info, 30, null)));
+                        BalloonTipManager.CreateBaloonTipInfo(line, "Automatic Reminder", 30, null)));
         }
 
         private void UpdateTrayIconTimerOnElapsed(object sender, ElapsedEventArgs elapsedEventArgs)
@@ -175,43 +196,55 @@ namespace AutomaticReminderController
         {
             try
             {
-                var sc = new ServiceController(CommonAutomaticReminder.ServiceName);
-                switch (sc.Status)
+                using (var sc = new ServiceController(CommonAutomaticReminder.ServiceName))
                 {
-                    case ServiceControllerStatus.ContinuePending:
-                    case ServiceControllerStatus.Running:
-                    case ServiceControllerStatus.StartPending:
-                        _trayIcon.ContextMenuStrip.Items[1].Enabled = true;
-                        _trayIcon.ContextMenuStrip.Items[2].Enabled = false;
-                        break;
-                    case ServiceControllerStatus.StopPending:
-                    case ServiceControllerStatus.PausePending:
-                    case ServiceControllerStatus.Paused:
-                    case ServiceControllerStatus.Stopped:
-                        _trayIcon.ContextMenuStrip.Items[1].Enabled = false;
-                        _trayIcon.ContextMenuStrip.Items[2].Enabled = true;
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException();
+                    switch (sc.Status)
+                    {
+                        case ServiceControllerStatus.ContinuePending:
+                        case ServiceControllerStatus.Running:
+                        case ServiceControllerStatus.StartPending:
+                            _trayIcon.ContextMenuStrip.Items[2].Enabled = true;
+                            _trayIcon.ContextMenuStrip.Items[3].Enabled = false;
+                            _trayIcon.ContextMenuStrip.Items[2].ToolTipText = $"Stop \"{UserConfiguration.ServiceName}\"";
+                            _trayIcon.ContextMenuStrip.Items[3].ToolTipText = $"Start \"{UserConfiguration.ServiceName}\" (Already running)";
+                            break;
+                        case ServiceControllerStatus.StopPending:
+                        case ServiceControllerStatus.PausePending:
+                        case ServiceControllerStatus.Paused:
+                        case ServiceControllerStatus.Stopped:
+                            _trayIcon.ContextMenuStrip.Items[2].Enabled = false;
+                            _trayIcon.ContextMenuStrip.Items[3].Enabled = true;
+                            _trayIcon.ContextMenuStrip.Items[2].ToolTipText = $"Stop \"{UserConfiguration.ServiceName}\" (Already stopped)";
+                            _trayIcon.ContextMenuStrip.Items[3].ToolTipText = $"Start \"{UserConfiguration.ServiceName}\"";
+                            break;
+                        default:
+                            throw new ArgumentOutOfRangeException();
+                    }
+                    _prevStatus = sc.Status;
                 }
-                _prevStatus = sc.Status;
             }
-            catch
+            catch(Exception ex)
             {
+                _trayIcon.ContextMenuStrip.Items[2].ToolTipText = $"Stop \"{UserConfiguration.ServiceName}\" ({ex.Message})";
+                _trayIcon.ContextMenuStrip.Items[3].ToolTipText = $"Start \"{UserConfiguration.ServiceName}\" ({ex.Message})";
             }
 
         }
         public void Dispose()
         {
+            if (_updateTrayIconTimer != null)
+            {
+                _updateTrayIconTimer.Stop();
+            }
+
+            source.Cancel();
+            source.Dispose();
+
             if (_trayIcon != null)
             {
                 _trayIcon.Dispose();
             }
 
-            if (_updateTrayIconTimer != null)
-            {
-                _updateTrayIconTimer.Stop();
-            }
             BalloonTipManager.ClearNotifications();
         }
     }

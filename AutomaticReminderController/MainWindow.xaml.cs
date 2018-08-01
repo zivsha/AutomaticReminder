@@ -61,6 +61,7 @@ namespace AutomaticReminderController
         {
             base.OnClosed(e);
             _trayIcon.Dispose();
+            Logger.Close();
         }
     }
 }

@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Specialized;
 using System.IO;
 using System.IO.Pipes;
-using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
@@ -69,7 +67,8 @@ namespace AutomaticReminderService
                 }
                 catch (Exception e)
                 {
-                   Logger.LogFormat("PipelineReaderProc error: {0}",e.Message);
+                    Logger.LogFormat("PipelineReaderProc error: {0}",e.Message);
+                    Thread.Sleep(5000);
                 }
 
             }
@@ -86,7 +85,7 @@ namespace AutomaticReminderService
             {
                 Logger.LogFormat("Failed to send FAKE reminder email");
             }
-            SendSms(UserConfiguration.FromName, UserConfiguration.TestPhoneNumber, "TEST", DateTime.Now);
+            SMSHelper.SendSms(UserConfiguration.FromName, UserConfiguration.TestPhoneNumber, "TEST", DateTime.Now);
         }
 
         public void StartReminder()
@@ -140,7 +139,7 @@ namespace AutomaticReminderService
                             && !String.IsNullOrEmpty(phoneNumber) 
                             && !reminderEntry.IsSmsReminderSent)
                         {
-                            SendSms(reminderEntry.Name, phoneNumber, "tomorrow", reminderEntry.DueDate);
+                            SMSHelper.SendSms(reminderEntry.Name, phoneNumber, "tomorrow", reminderEntry.DueDate);
                             reminderEntry.IsSmsReminderSent = true;
                         }
 
@@ -181,7 +180,7 @@ namespace AutomaticReminderService
                             }
                             else
                             {
-                                Logger.LogFormat("Failed to send happy hour reminder email to {0}", reminderEntry.Name);
+                                Logger.LogFormat("Failed to send email reminder to {0}", reminderEntry.Name);
                             }
                         }
                     }
@@ -194,31 +193,7 @@ namespace AutomaticReminderService
             }
         }
 
-        private void SendSms(string name, string phoneNumber, string when, DateTime dueDate)
-        {
-            string message = String.Format(
-                "Hi {1},{0}" +
-                "This is a friendly reminder that you are in charge of the next team happy hour scheduled for {2} - {3}." +
-                "{0}RoboCookie",
-                Environment.NewLine, name, when, dueDate.ToLongDateString());
-            string gateway = UserConfiguration.SmsServerGatway;
-            using (var wb = new WebClient())
-            {
-                var data = new NameValueCollection
-                {
-                    ["Username"] = UserConfiguration.SmsServerUserName,
-                    ["Password"] = UserConfiguration.SmsServerPassword,
-                    ["Target"] = phoneNumber,
-                    ["Source"] = "Automatic Reminder",
-                    ["Validity"] = string.Empty,
-                    ["Replace"] = string.Empty,
-                    ["message"] = message
-                };
-                byte[] bytes = wb.UploadValues(new Uri(gateway), "POST", data);
-                var response = System.Text.Encoding.Default.GetString(bytes);
-                Logger.LogFormat("Sent SMS message to {0}: {1}. Response: {2}", name, phoneNumber, response);
-            }
-        }
+
 
         private void OnAutomaticallyReminded(string name, string email, string when, DateTime dueDate)
         {

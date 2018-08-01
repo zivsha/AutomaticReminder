@@ -1,0 +1,31 @@
+# This is a comment line.
+# Only lines starting with '@' are parsed as contact information
+# contact lines are parse with the following format:
+# @ last_name first_name; email; phone_number[OPTIONAL]
+
+@ LastName1 FirstName1; myemail1@email.com
+@ LastName2 FirstName2; myemail2@email.com; +1234567890
+
+----------END OF CONTACTS, DO NOT CHANGE THIS LINE---------
+# Below are events lines
+# Event lines have the one of the following format:
+
+# 	dddd, MMMM dd, yyyy; LastName FirstName
+# 	dddd, MMMM d, yyyy; LastName FirstName 
+
+# 	Example for first format:  Thursday, June 22, 2015
+# 	Example for second format: Thursday, September 3, 2015	
+
+# The following are appended to each line (with ';' between them) after each reminder is sent:
+# Sent a 1-week-to-go reminder
+# Sent a 2-day-to-go reminder
+# Sent a 1-day-to-go reminder
+# Sent a today reminder
+# Sent an SMS reminder
+
+# For example, if the service sent a reminder a week before the event and 2 days before the line will look like this:
+# Thursday, June 22, 2015; LastName1 FirstName1; Sent a 1-week-to-go reminder; Sent a 2-day-to-go reminder
+
+
+Thursday, June 22, 2015; LastName1 FirstName1
+Thursday, September 3, 2015; LastName2 FirstName2

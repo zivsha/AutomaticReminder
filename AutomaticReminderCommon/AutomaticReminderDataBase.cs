@@ -34,7 +34,7 @@ namespace AutomaticReminderCommon
         {
             if (!File.Exists(CommonAutomaticReminder.DbPath))
             {
-                Logger.LogFormat("ERROR: File {0} was not found", CommonAutomaticReminder.DbPath);
+                Logger.LogFormat("AutomaticReminderDataBase Error: Path to database '{0}' was not found", CommonAutomaticReminder.DbPath);
                 return;
             }
             var fileLines = File.ReadAllLines(CommonAutomaticReminder.DbPath);
@@ -61,7 +61,7 @@ namespace AutomaticReminderCommon
         {
             if (!File.Exists(CommonAutomaticReminder.DbPath))
             {
-                Logger.LogFormat("ERROR: File {0} was not found", CommonAutomaticReminder.DbPath);
+                Logger.LogFormat("AutomaticReminderDataBase Error: Path to database '{0}' was not found", CommonAutomaticReminder.DbPath);
                 return;
             }
             var fileLines = File.ReadAllLines(CommonAutomaticReminder.DbPath);
@@ -71,7 +71,7 @@ namespace AutomaticReminderCommon
                 {
                     break;
                 }
-                if (line.StartsWith("#"))
+                if (line.StartsWith("@"))
                 {
                     string[] pair = line.Split(';');
                     if (pair.Length < 1)

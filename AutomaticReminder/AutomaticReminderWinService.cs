@@ -67,6 +67,7 @@ namespace AutomaticReminderService
             Logger.LogFormat("Service {0} is stopping...", ServiceName);
             if (_automaticReminder != null)
                 _automaticReminder.StopReminder();
+            Logger.Close();
         }
     }
 }

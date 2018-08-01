@@ -1,0 +1,39 @@
+
+####### Reminders Related #########################################
+# The "database" for the events and contacts
+DatabasePath = C:\path\to\database.txt
+# "From" name and email should be the same as in the database if it exists there
+# These values are used as the email sender in the Exchange email
+FromEmail = my.email@email.com
+FromName = LastName, FirstName 
+# The phone number to send a test text message to verify the reminder is working
+TestPhoneNumber = +1-234-567-890
+AutomaticReminderIcsTemplatePath = C:\path\to\calendar_event_template.ics
+EventLocation = The Place
+# Start time is in format: HH:mm
+StartTime = 16:35
+###################################################################
+
+
+####### SMS Related ###############################################
+SmsServerUserName = username
+SmsServerPassword = password
+SmsServerGatway = https://examples_sms_gateway.com
+###################################################################
+
+
+####### General ###################################################
+LogPath = C:\path\to\my\log.txt
+###################################################################
+
+
+####### Service Related ##########################################
+# ServiceName is the name of the service that will appear under the Name of the service in services.msc
+ServiceName = My Automatic Reminder
+# ServiceDescription is the description that will appear under the Description of the service in services.msc
+ServiceDescription = Automatic Reminder
+# ServiceDisplayName is the name that will appear as the process name
+ServiceDisplayName = AutomaticReminder
+# ServiceStartType values: Automatic | Manual | Disabled (https://docs.microsoft.com/en-us/dotnet/api/system.serviceprocess.servicestartmode?view=netframework-4.7.2)
+ServiceStartType = Manual
+###################################################################

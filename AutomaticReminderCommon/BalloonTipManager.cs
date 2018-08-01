@@ -26,6 +26,19 @@ namespace AutomaticReminderCommon
             });
             m_ballonTips.Clear();
         }
+        public static void CreateBaloonTipInfo(string message, string caption = "Automatic Reminder Info", int timeoutInSeconds = 10, Action onBaloonTipClickedHandle = null)
+        {
+            BalloonTipManager.CreateBaloonTip(SystemIcons.Information, caption, message, ToolTipIcon.Info, timeoutInSeconds, onBaloonTipClickedHandle);
+        }
+        public static void CreateBaloonTipWarning(string message, string caption = "Automatic Reminder Warning", int timeoutInSeconds = 10, Action onBaloonTipClickedHandle = null)
+        {
+            BalloonTipManager.CreateBaloonTip(SystemIcons.Warning, caption, message, ToolTipIcon.Warning, timeoutInSeconds, onBaloonTipClickedHandle);
+        }
+        public static void CreateBaloonTipError(string message, string caption = "Automatic Reminder Error", int timeoutInSeconds = 10, Action onBaloonTipClickedHandle = null)
+        {
+            BalloonTipManager.CreateBaloonTip(SystemIcons.Error, caption, message, ToolTipIcon.Error, timeoutInSeconds, onBaloonTipClickedHandle);
+        }
+
         public static void CreateBaloonTip(Icon trayIcon, string caption, string message, ToolTipIcon baloonTipIcon, int seconds, Action onBaloonTipClickedHandle)
         {
             var notifyIcon = new NotifyIcon
@@ -64,7 +77,7 @@ namespace AutomaticReminderCommon
         {
             if (mouseEventArgs.Button == MouseButtons.Left)
             {
-                Logger.LogFormat("Click. Handled by process: {0}", Process.GetCurrentProcess().ProcessName);
+                //Logger.LogFormat("Click. Handled by process: {0}", Process.GetCurrentProcess().ProcessName);
 
                 var notifyIcon = sender as NotifyIcon;
                 if (notifyIcon != null)

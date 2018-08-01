@@ -8,17 +8,15 @@
         Title="Automatic Reminder Info" d:DesignWidth="556" d:DesignHeight="295">
     <Canvas>
         <Canvas Name="CanvasContacts">
-            <DataGrid HorizontalAlignment="Left" 
-			VerticalAlignment="Top"
-			ItemsSource="{Binding ContactsList}"  CanUserAddRows="True"/>
+            <Grid HorizontalAlignment="Left" VerticalAlignment="Top" >
+                <DataGrid ItemsSource="{Binding ContactsList}"  CanUserAddRows="True"/>
+            </Grid>
         </Canvas>
         <Canvas Name="CanvasEvents">
             <!--<Button Click="ButtonBase_OnClick" Content="Hide" Width="52" Margin="0,0,0,261"/>-->
         </Canvas>
-        <DataGrid HorizontalAlignment="Left" 
-        	VerticalAlignment="Top" 
-                  VerticalScrollBarVisibility="Visible"
-        	ItemsSource="{Binding AutomaticReminderEvents}"
-        	CanUserAddRows="True" Canvas.Left="315"/>
+        <Grid HorizontalAlignment="Left"  VerticalAlignment="Top" >
+            <DataGrid  VerticalScrollBarVisibility="Visible"  ItemsSource="{Binding AutomaticReminderEvents}" CanUserAddRows="True" Canvas.Left="315" RenderTransformOrigin="0.415,1.432"/>
+        </Grid>
     </Canvas>
 </Window>
